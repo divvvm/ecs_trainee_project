@@ -22,40 +22,40 @@ variable "security_group_id" {
 variable "services" {
   description = "List of services with their target group configurations"
   type = list(object({
-    name             = string
-    port             = number
+    name              = string
+    port              = number
     health_check_path = string
-    path_pattern     = string
-    priority         = number
+    path_pattern      = string
+    priority          = number
   }))
   default = [
     {
-      name             = "backend"
-      port             = 8000
+      name              = "backend"
+      port              = 8000
       health_check_path = "/health"
-      path_pattern     = "/api/*"
-      priority         = 10
+      path_pattern      = "/api/*"
+      priority          = 10
     },
     {
-      name             = "prometheus"
-      port             = 9090
+      name              = "prometheus"
+      port              = 9090
       health_check_path = "/-/healthy"
-      path_pattern     = "/prometheus/*"
-      priority         = 20
+      path_pattern      = "/prometheus/*"
+      priority          = 20
     },
     {
-      name             = "grafana"
-      port             = 3000
+      name              = "grafana"
+      port              = 3000
       health_check_path = "/api/health"
-      path_pattern     = "/grafana/*"
-      priority         = 30
+      path_pattern      = "/grafana/*"
+      priority          = 30
     },
     {
-      name             = "frontend"
-      port             = 8080
+      name              = "frontend"
+      port              = 8080
       health_check_path = "/"
-      path_pattern     = "/*"
-      priority         = 40
+      path_pattern      = "/*"
+      priority          = 40
     }
   ]
 }

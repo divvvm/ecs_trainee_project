@@ -73,7 +73,7 @@ module "ecs" {
   ecr_repository_urls      = module.ecr.repository_urls
   depends_on               = [module.cloudwatch_logs]
   services = [
-        {
+    {
       name           = "backend"
       image          = "${module.ecr.repository_urls["app-service"]}:latest"
       container_port = 8000
@@ -112,7 +112,7 @@ module "ecs" {
       container_port = 8080
       cpu            = "256"
       memory         = "2048"
-      environment    = [
+      environment = [
         {
           name  = "OPENWEBUI_API_URL"
           value = "http://${module.alb.alb_dns_name}/api"

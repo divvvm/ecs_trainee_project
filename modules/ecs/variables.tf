@@ -48,7 +48,7 @@ variable "services" {
     container_port = number
     cpu            = string
     memory         = string
-    environment    = list(object({
+    environment = list(object({
       name  = string
       value = string
     }))
