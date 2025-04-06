@@ -15,6 +15,12 @@ variable "rds_sg_name" {
   default     = "rds-sg"
 }
 
+variable "ecs_sg_name" {
+  description = "Name of the ECS security group"
+  type        = string
+  default     = "ecs-sg"
+}
+
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string

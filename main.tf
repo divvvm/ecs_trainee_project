@@ -51,3 +51,97 @@ module "rds" {
   private_subnet_ids = [module.subnets.private_db_subnet_1_id, module.subnets.private_db_subnet_2_id]
   security_group_id  = module.security_groups.rds_sg_id
 }
+
+module "cloudwatch_logs" {
+  source = "./modules/cloudwatch_logs"
+
+  cluster_name  = "chat-cluster"
+  service_names = ["backend", "frontend", "prometheus", "grafana", "ollama"]
+}
+
+module "ecr" {
+  source = "./modules/ecr"
+}
+
+module "ecs" {
+  source                   = "./modules/ecs"
+  private_subnet_ids       = [module.subnets.private_app_subnet_1_id, module.subnets.private_app_subnet_2_id]
+  ecs_security_group_id    = module.security_groups.ecs_sg_id
+  ollama_security_group_id = module.security_groups.ollama_sg_id
+  target_group_arns        = module.alb.target_group_arns
+  db_endpoint              = module.rds.db_endpoint
+  ecr_repository_urls      = module.ecr.repository_urls
+  depends_on               = [module.cloudwatch_logs]
+  services = [
+        {
+      name           = "backend"
+      image          = "${module.ecr.repository_urls["app-service"]}:latest"
+      container_port = 8000
+      cpu            = "256"
+      memory         = "512"
+      environment = [
+        {
+          name  = "DB_HOST"
+          value = module.rds.db_host
+        },
+        {
+          name  = "DB_PORT"
+          value = "5432"
+        },
+        {
+          name  = "DB_NAME"
+          value = "mydb"
+        },
+        {
+          name  = "DB_USER"
+          value = "denys"
+        },
+        {
+          name  = "DB_PASSWORD"
+          value = "password123"
+        },
+        {
+          name  = "PGPASSWORD"
+          value = "password123"
+        }
+      ]
+    },
+    {
+      name           = "frontend"
+      image          = "${module.ecr.repository_urls["web-service"]}:latest"
+      container_port = 8080
+      cpu            = "256"
+      memory         = "2048"
+      environment    = [
+        {
+          name  = "OPENWEBUI_API_URL"
+          value = "http://${module.alb.alb_dns_name}/api"
+        }
+      ]
+    },
+    {
+      name           = "prometheus"
+      image          = "prom/prometheus:latest"
+      container_port = 9090
+      cpu            = "256"
+      memory         = "512"
+      environment    = []
+    },
+    {
+      name           = "grafana"
+      image          = "grafana/grafana:latest"
+      container_port = 3000
+      cpu            = "256"
+      memory         = "512"
+      environment    = []
+    },
+    {
+      name           = "ollama"
+      image          = "${module.ecr.repository_urls["ollama"]}:latest"
+      container_port = 11434
+      cpu            = "2048"
+      memory         = "6144"
+      environment    = []
+    }
+  ]
+}
