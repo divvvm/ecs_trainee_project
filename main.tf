@@ -116,6 +116,18 @@ module "ecs" {
         {
           name  = "OPENWEBUI_API_URL"
           value = "http://${module.alb.alb_dns_name}/api"
+        },
+        {
+          name  = "WEBUI_LOG_LEVEL"
+          value = "DEBUG"
+        },
+        {
+          name  = "WEBUI_URL"
+          value = "http://${module.alb.alb_dns_name}"
+        },
+        {
+          name  = "WEBUI_AUTH"
+          value = "False"
         }
       ]
     },
