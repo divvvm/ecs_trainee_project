@@ -153,9 +153,11 @@ async def tool_servers():
         {
             "id": "ollama-server",
             "name": "Local Ollama Server",
-            "tools": ["ollama"]
+            "tools": ["ollama"],
+            "selected_tool_ids": ["ollama"]
         }
     ]
+
 @app.get("/api/changelog")
 async def changelog():
     return []
