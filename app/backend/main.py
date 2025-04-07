@@ -136,6 +136,18 @@ async def signin(user: UserSignin):
         cursor.close()
         conn.close()
 
+@app.get("/api/v1/tools/")
+async def tools():
+    return []
+
+@app.get("/api/v1/tool_servers/")
+async def tool_servers():
+    return []
+
+@app.get("/api/changelog")
+async def changelog():
+    return []
+
 @app.post("/api/chat/completions")
 async def chat_completions(request: ChatRequest):
     conn = psycopg2.connect(**DB_CONFIG)
