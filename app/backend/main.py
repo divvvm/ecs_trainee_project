@@ -57,13 +57,15 @@ async def get_config():
             }
         ],
         "default_model": "llama3",
-        "enable_ldap": False,
-        "enable_signup": True,
-        "enable_login_form": False,  # Додаємо, щоб OpenWebUI знав, що логін-форма не потрібна
-        "enable_oauth_signup": False,  # Додаємо для повноти конфігурації
-        "enable_web_search": False,
-        "enable_community_sharing": False,
-        "enable_ollama": True,
+        "features": {
+            "enable_ldap": False,
+            "enable_signup": True,
+            "enable_login_form": False,
+            "enable_oauth_signup": False,
+            "enable_web_search": False,
+            "enable_community_sharing": False,
+            "enable_ollama": True
+        },
         "ollama_url": "http://chat-cluster-ollama-service:11434",
         "default_locale": "en",
         "default_prompt_suggestions": [
