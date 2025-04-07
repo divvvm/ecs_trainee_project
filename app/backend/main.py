@@ -1,10 +1,12 @@
-from fastapi import FastAPI
-import requests
-import psycopg2
-import os
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, EmailStr
 from sentence_transformers import SentenceTransformer
 from datetime import datetime
+import psycopg2
+import requests
+import os
+from passlib.hash import bcrypt
 
 app = FastAPI()
 
@@ -35,6 +37,14 @@ class ChatRequest(BaseModel):
 
 class ChatRequestLegacy(BaseModel):
     prompt: str
+
+class UserSignup(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserSignin(BaseModel):
+    email: EmailStr
+    password: str
 
 @app.get("/health")
 async def health_check():
@@ -75,6 +85,57 @@ async def get_config():
         ]
     }
 
+@app.post("/api/v1/auths/signup")
+async def signup(user: UserSignup):
+    conn = psycopg2.connect(**DB_CONFIG)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT id FROM users WHERE email = %s", (user.email,))
+        if cursor.fetchone():
+            raise HTTPException(status_code=400, detail="User already exists")
+
+        hashed_password = bcrypt.hash(user.password)
+
+        cursor.execute(
+            "INSERT INTO users (email, password) VALUES (%s, %s)",
+            (user.email, hashed_password)
+        )
+        conn.commit()
+        return JSONResponse(content={"message": "User created successfully"}, status_code=201)
+
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.post("/api/v1/auths/signin")
+async def signin(user: UserSignin):
+    conn = psycopg2.connect(**DB_CONFIG)
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("SELECT id, password FROM users WHERE email = %s", (user.email,))
+        result = cursor.fetchone()
+        if not result or not bcrypt.verify(user.password, result[1]):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+
+        return {
+            "access_token": "dummy-token",
+            "token_type": "bearer",
+            "user": {
+                "id": result[0],
+                "email": user.email
+            }
+        }
+
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+    finally:
+        cursor.close()
+        conn.close()
+
 @app.post("/api/chat/completions")
 async def chat_completions(request: ChatRequest):
     conn = psycopg2.connect(**DB_CONFIG)
@@ -95,19 +156,16 @@ async def chat_completions(request: ChatRequest):
         similar = cursor.fetchone()
         context = similar[1] if similar else ""
 
-        try:
-            response = requests.post(
-                "http://chat-cluster-ollama-service:11434/api/generate",
-                json={
-                    "model": "llama3",
-                    "prompt": f"Context: {context}\n\nUser: {user_message}",
-                    "stream": False
-                }
-            )
-            response.raise_for_status()
-            ollama_response = response.json().get("response", "")
-        except requests.RequestException as e:
-            return {"error": f"Failed to get response from Ollama: {str(e)}"}
+        response = requests.post(
+            "http://chat-cluster-ollama-service:11434/api/generate",
+            json={
+                "model": "llama3",
+                "prompt": f"Context: {context}\n\nUser: {user_message}",
+                "stream": False
+            }
+        )
+        response.raise_for_status()
+        ollama_response = response.json().get("response", "")
 
         response_embedding = model.encode(ollama_response).tolist()
 
@@ -138,51 +196,6 @@ async def chat_completions(request: ChatRequest):
                 "total_tokens": len(user_message.split()) + len(ollama_response.split())
             }
         }
-    except Exception as e:
-        return {"error": str(e)}
-    finally:
-        cursor.close()
-        conn.close()
-
-@app.post("/api/chat")
-async def chat(request: ChatRequestLegacy):
-    conn = psycopg2.connect(**DB_CONFIG)
-    cursor = conn.cursor()
-
-    try:
-        model = get_embedding_model()
-        query_embedding = model.encode(request.prompt).tolist()
-
-        cursor.execute(
-            "SELECT message, response FROM messages ORDER BY embedding <-> %s LIMIT 1",
-            (query_embedding,)
-        )
-        similar = cursor.fetchone()
-        context = similar[1] if similar else ""
-
-        try:
-            response = requests.post(
-                "http://chat-cluster-ollama-service:11434/api/generate",
-                json={
-                    "model": "llama3",
-                    "prompt": f"Context: {context}\n\nUser: {request.prompt}",
-                    "stream": False
-                }
-            )
-            response.raise_for_status()
-            ollama_response = response.json().get("response", "")
-        except requests.RequestException as e:
-            return {"error": f"Failed to get response from Ollama: {str(e)}"}
-
-        response_embedding = model.encode(ollama_response).tolist()
-
-        cursor.execute(
-            "INSERT INTO messages (message, response, embedding) VALUES (%s, %s, %s)",
-            (request.prompt, ollama_response, response_embedding)
-        )
-        conn.commit()
-
-        return {"response": ollama_response}
     except Exception as e:
         return {"error": str(e)}
     finally:
