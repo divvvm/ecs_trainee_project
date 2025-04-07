@@ -138,12 +138,24 @@ async def signin(user: UserSignin):
 
 @app.get("/api/v1/tools/")
 async def tools():
-    return []
+    return [
+        {
+            "id": "ollama",
+            "name": "Ollama",
+            "type": "llm",
+            "url": "http://chat-cluster-ollama-service:11434"
+        }
+    ]
 
 @app.get("/api/v1/tool_servers/")
 async def tool_servers():
-    return []
-
+    return [
+        {
+            "id": "ollama-server",
+            "name": "Local Ollama Server",
+            "tools": ["ollama"]
+        }
+    ]
 @app.get("/api/changelog")
 async def changelog():
     return []
