@@ -57,9 +57,10 @@ async def get_config():
             }
         ],
         "default_model": "llama3",
+        "auth_enabled": False,
         "features": {
             "enable_ldap": False,
-            "enable_signup": True,
+            "enable_signup": False,
             "enable_login_form": False,
             "enable_oauth_signup": False,
             "enable_web_search": False,
@@ -74,6 +75,7 @@ async def get_config():
             "Explain quantum physics in simple terms"
         ]
     }
+
 
 @app.post("/api/chat/completions")
 async def chat_completions(request: ChatRequest):
