@@ -66,7 +66,8 @@ async def get_config():
             "enable_oauth_signup": False,
             "enable_community_sharing": False,
             "enable_web_search": False,
-            "enable_ollama": True
+            "enable_ollama": True,
+            "enable_tools": False
         },
         "models": [
             {
