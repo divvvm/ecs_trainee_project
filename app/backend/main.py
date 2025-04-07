@@ -16,7 +16,6 @@ DB_CONFIG = {
     "database": os.getenv("DB_NAME")
 }
 
-# Відкладаємо ініціалізацію моделі до першого використання
 embedding_model = None
 
 def get_embedding_model():
@@ -49,6 +48,16 @@ async def health_check():
 @app.get("/api/config")
 async def get_config():
     return {
+        "auth_enabled": True,
+        "features": {
+            "enable_login_form": True,
+            "enable_signup": True,
+            "enable_ldap": False,
+            "enable_oauth_signup": False,
+            "enable_community_sharing": False,
+            "enable_web_search": False,
+            "enable_ollama": True
+        },
         "models": [
             {
                 "id": "llama3",
@@ -57,16 +66,6 @@ async def get_config():
             }
         ],
         "default_model": "llama3",
-        "auth_enabled": False,
-        "features": {
-            "enable_ldap": False,
-            "enable_signup": False,
-            "enable_login_form": False,
-            "enable_oauth_signup": False,
-            "enable_web_search": False,
-            "enable_community_sharing": False,
-            "enable_ollama": True
-        },
         "ollama_url": "http://chat-cluster-ollama-service:11434",
         "default_locale": "en",
         "default_prompt_suggestions": [
@@ -76,14 +75,12 @@ async def get_config():
         ]
     }
 
-
 @app.post("/api/chat/completions")
 async def chat_completions(request: ChatRequest):
     conn = psycopg2.connect(**DB_CONFIG)
     cursor = conn.cursor()
 
     try:
-        # Отримуємо останнє повідомлення користувача
         user_message = next((msg.content for msg in request.messages if msg.role == "user"), "")
         if not user_message:
             return {"error": "No user message found in the request"}
@@ -120,7 +117,6 @@ async def chat_completions(request: ChatRequest):
         )
         conn.commit()
 
-        # Повертаємо відповідь у форматі OpenAI API
         return {
             "id": "chatcmpl-" + str(id(request)),
             "object": "chat.completion",
