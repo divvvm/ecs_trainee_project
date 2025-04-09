@@ -65,7 +65,7 @@ variable "services" {
     {
       name           = "frontend"
       image          = ""
-      container_port = 8080
+      container_port = 3080
       cpu            = "256"
       memory         = "512"
       environment    = []

@@ -1,21 +1,14 @@
-FROM node:18-alpine AS builder
+FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package.json package-lock.json ./
 RUN npm install
 
-COPY . ./
+COPY . .
+
 RUN npm run build
 
-FROM node:18-alpine AS runner
+EXPOSE 3080
 
-WORKDIR /app
-
-RUN npm install -g serve
-
-COPY --from=builder /app/out .
-
-EXPOSE 8080
-
-CMD ["serve", "-s", ".", "-l", "8080"]
+CMD ["npm", "start"]
