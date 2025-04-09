@@ -27,6 +27,9 @@ jobs:
       contents: read
       id-token: write
 
+    outputs:
+      alb_dns_name: ${{ steps.alb-dns.outputs.alb_dns_name }}
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -69,11 +72,10 @@ jobs:
       run: terraform apply -auto-approve -input=false
 
     - name: Export ALB DNS as output
-      if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
       id: alb-dns
       run: |
         ALB_DNS=$(terraform output -raw alb_dns_name)
-        echo "ALB_DNS=$ALB_DNS" >> $GITHUB_OUTPUT
+        echo "alb_dns_name=$ALB_DNS" >> $GITHUB_OUTPUT
 
   build-and-push:
     name: 'Build and Push Docker Images'
@@ -110,7 +112,7 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-    - name: Build and push web-service image
+    - name: Build and push web-service image (Chatbot UI)
       uses: docker/build-push-action@v5
       with:
         context: ./app/frontend
@@ -118,9 +120,11 @@ jobs:
         push: true
         tags: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY_WEB }}:latest
         build-args: |
-          NEXT_PUBLIC_API_URL=http://${{ steps.alb-dns.outputs.ALB_DNS }}:8000
+          OPENAI_API_HOST=http://${{ needs.terraform.outputs.alb_dns_name }}:8000/v1
+          NEXT_PUBLIC_SUPABASE_URL=
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=
         cache-from: type=gha
-        cache-to: type=gha,mode=max      
+        cache-to: type=gha,mode=max
 
     - name: Build and push ollama image
       uses: docker/build-push-action@v5
