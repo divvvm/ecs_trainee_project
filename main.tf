@@ -114,20 +114,8 @@ module "ecs" {
       memory         = "2048"
       environment = [
         {
-          name  = "ENDPOINT_NAME"
-          value = "MyCustomAPI"
-        },
-        {
-          name  = "ENDPOINT_API_KEY"
-          value = "dummy-token"
-        },
-        {
-          name  = "ENDPOINT_BASE_URL"
-          value = "http://${module.alb.alb_dns_name}/v1"
-        },
-        {
-          name  = "ENDPOINT_MODELS"
-          value = "llama3"
+          name  = "CONFIG_PATH"
+          value = "/app/librechat.yaml"
         },
         {
           name  = "NODE_ENV"

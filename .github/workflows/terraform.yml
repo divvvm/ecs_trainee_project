@@ -68,6 +68,13 @@ jobs:
       if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
       run: terraform apply -auto-approve -input=false
 
+    - name: Export ALB DNS as output
+      if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+      id: alb-dns
+      run: |
+        ALB_DNS=$(terraform output -raw alb_dns_name)
+        echo "ALB_DNS=$ALB_DNS" >> $GITHUB_OUTPUT
+
   build-and-push:
     name: 'Build and Push Docker Images'
     runs-on: ubuntu-latest
@@ -92,6 +99,24 @@ jobs:
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
+
+    - name: Generate librechat.yaml with ALB DNS
+      run: |
+        cd app/frontend
+        cat <<EOF > librechat.yaml
+        version: 1.2.1
+        cache: true
+        endpoints:
+          custom:
+            - name: "MyCustomAPI"
+              apiKey: "dummy-token"
+              baseURL: "http://${{ steps.alb-dns.outputs.ALB_DNS }}:8000/v1"
+              models:
+                default: ["llama3"]
+              titleConvo: true
+              titleModel: "llama3"
+              modelDisplayLabel: "Custom LLaMA"
+        EOF
 
     - name: Build and push app-service image
       uses: docker/build-push-action@v5
