@@ -114,10 +114,6 @@ module "ecs" {
       memory         = "2048"
       environment = [
         {
-          name  = "CONFIG_PATH"
-          value = "/app/librechat.yaml"
-        },
-        {
           name  = "NODE_ENV"
           value = "production"
         }

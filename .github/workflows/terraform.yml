@@ -100,24 +100,6 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Generate librechat.yaml with ALB DNS
-      run: |
-        cd app/frontend
-        cat <<EOF > librechat.yaml
-        version: 1.2.1
-        cache: true
-        endpoints:
-          custom:
-            - name: "MyCustomAPI"
-              apiKey: "dummy-token"
-              baseURL: "http://${{ steps.alb-dns.outputs.ALB_DNS }}:8000/v1"
-              models:
-                default: ["llama3"]
-              titleConvo: true
-              titleModel: "llama3"
-              modelDisplayLabel: "Custom LLaMA"
-        EOF
-
     - name: Build and push app-service image
       uses: docker/build-push-action@v5
       with:
@@ -135,8 +117,10 @@ jobs:
         file: ./app/frontend/Dockerfile
         push: true
         tags: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY_WEB }}:latest
+        build-args: |
+          NEXT_PUBLIC_API_URL=http://${{ steps.alb-dns.outputs.ALB_DNS }}:8000
         cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-to: type=gha,mode=max      
 
     - name: Build and push ollama image
       uses: docker/build-push-action@v5
