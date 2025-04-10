@@ -48,7 +48,7 @@ class UserSignin(BaseModel):
 
 @app.get("/api/v1/tools/")
 async def get_tools():
-    tools = []
+    tools = [{"id": 1, "name": "Default Tool", "active": True}]
     return tools
 
 @app.get("/health")
