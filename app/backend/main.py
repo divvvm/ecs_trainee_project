@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
 from sentence_transformers import SentenceTransformer
 from datetime import datetime
@@ -7,6 +8,11 @@ import psycopg2
 import requests
 import os
 from passlib.hash import bcrypt
+import logging
+
+# Налаштування логування
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -65,6 +71,7 @@ class Tools:
 
 @app.get("/api/v1/tools/")
 async def get_tools():
+    logger.info("Отримано запит до /api/v1/tools/")
     tools = [
         {
             "id": "reverse_string",
@@ -82,13 +89,42 @@ async def get_tools():
             }
         }
     ]
+    logger.info(f"Повертаємо інструменти: {tools}")
+    return tools
+
+@app.get("/api/tools/")
+async def get_tools_alt():
+    logger.info("Отримано запит до /api/tools/")
+    tools = [
+        {
+            "id": "reverse_string",
+            "name": "Reverse String",
+            "active": True
+        }
+    ]
+    logger.info(f"Повертаємо інструменти: {tools}")
+    return tools
+
+@app.get("/tools")
+async def get_tools_simple():
+    logger.info("Отримано запит до /tools")
+    tools = [
+        {
+            "id": "reverse_string",
+            "name": "Reverse String",
+            "active": True
+        }
+    ]
+    logger.info(f"Повертаємо інструменти: {tools}")
     return tools
 
 @app.post("/api/v1/tools/reverse_string")
 async def reverse_string_tool(string: str):
+    logger.info(f"Отримано запит до /api/v1/tools/reverse_string з параметром: {string}")
     tool = Tools()
     tool.valves.api_key = "42"
     result = tool.reverse_string(string)
+    logger.info(f"Результат reverse_string: {result}")
     return {"result": result}
 
 @app.get("/health")
@@ -102,7 +138,8 @@ async def health_check():
 
 @app.get("/api/config")
 async def get_config():
-    return {
+    logger.info("Отримано запит до /api/config")
+    config = {
         "auth_enabled": True,
         "features": {
             "enable_login_form": True,
@@ -111,7 +148,7 @@ async def get_config():
             "enable_oauth_signup": False,
             "enable_community_sharing": False,
             "enable_web_search": False,
-            "enable_ollama": True,
+            "enable_ollama": True
         },
         "models": [
             {
@@ -127,8 +164,17 @@ async def get_config():
             "What is the capital of France?",
             "Tell me a joke",
             "Explain quantum physics in simple terms"
+        ],
+        "tools": [  # Додаємо інструменти в конфігурацію
+            {
+                "id": "reverse_string",
+                "name": "Reverse String",
+                "active": True
+            }
         ]
     }
+    logger.info(f"Повертаємо конфігурацію: {config}")
+    return config
 
 @app.post("/api/v1/auths/signup")
 async def signup(user: UserSignup):
