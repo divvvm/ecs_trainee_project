@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from sentence_transformers import SentenceTransformer
 from datetime import datetime
 import psycopg2
@@ -46,10 +46,50 @@ class UserSignin(BaseModel):
     email: EmailStr
     password: str
 
+class Tools:
+    def __init__(self):
+        """Initialize the Tool."""
+        self.valves = self.Valves()
+
+    class Valves(BaseModel):
+        api_key: str = Field("", description="Your API key here")
+
+    def reverse_string(self, string: str) -> str:
+        """
+        Reverses the input string.
+        :param string: The string to reverse
+        """
+        if self.valves.api_key != "42":
+            return "Wrong API key"
+        return string[::-1]
+
 @app.get("/api/v1/tools/")
 async def get_tools():
-    tools = [{"id": 1, "name": "Default Tool", "active": True}]
+    tools = [
+        {
+            "id": "reverse_string",
+            "name": "Reverse String",
+            "description": "Reverses the input string.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "string": {
+                        "type": "string",
+                        "description": "The string to reverse"
+                    }
+                },
+                "required": ["string"]
+            }
+        }
+    ]
     return tools
+
+@app.post("/api/v1/tools/reverse_string")
+async def reverse_string_tool(string: str):
+    tool = Tools()
+    tool.valves.api_key = "42"
+    result = tool.reverse_string(string)
+    return {"result": result}
 
 @app.get("/health")
 async def health_check():
