@@ -46,6 +46,11 @@ class UserSignin(BaseModel):
     email: EmailStr
     password: str
 
+@app.get("/api/v1/tools/")
+async def get_tools():
+    tools = []
+    return tools
+
 @app.get("/health")
 async def health_check():
     try:
@@ -89,21 +94,17 @@ async def get_config():
 async def signup(user: UserSignup):
     conn = psycopg2.connect(**DB_CONFIG)
     cursor = conn.cursor()
-
     try:
         cursor.execute("SELECT id FROM users WHERE email = %s", (user.email,))
         if cursor.fetchone():
             raise HTTPException(status_code=400, detail="User already exists")
-
         hashed_password = bcrypt.hash(user.password)
-
         cursor.execute(
             "INSERT INTO users (email, password) VALUES (%s, %s)",
             (user.email, hashed_password)
         )
         conn.commit()
         return JSONResponse(content={"message": "User created successfully"}, status_code=201)
-
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
     finally:
@@ -114,13 +115,11 @@ async def signup(user: UserSignup):
 async def signin(user: UserSignin):
     conn = psycopg2.connect(**DB_CONFIG)
     cursor = conn.cursor()
-
     try:
         cursor.execute("SELECT id, password FROM users WHERE email = %s", (user.email,))
         result = cursor.fetchone()
         if not result or not bcrypt.verify(user.password, result[1]):
             raise HTTPException(status_code=401, detail="Invalid credentials")
-
         return {
             "access_token": "dummy-token",
             "token_type": "bearer",
@@ -129,34 +128,11 @@ async def signin(user: UserSignin):
                 "email": user.email
             }
         }
-
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
-
-@app.get("/api/tools/")
-async def tools():
-    return [
-        {
-            "id": "ollama",
-            "name": "Ollama",
-            "type": "llm",
-            "url": "http://chat-cluster-ollama-service:11434"
-        }
-    ]
-
-@app.get("/api/tool_servers/")
-async def tool_servers():
-    return [
-        {
-            "id": "ollama-server",
-            "name": "Local Ollama Server",
-            "tools": ["ollama"],
-            "selected_tool_ids": ["ollama"]
-        }
-    ]
 
 @app.get("/api/changelog")
 async def changelog():
@@ -166,22 +142,18 @@ async def changelog():
 async def chat_completions(request: ChatRequest):
     conn = psycopg2.connect(**DB_CONFIG)
     cursor = conn.cursor()
-
     try:
         user_message = next((msg.content for msg in request.messages if msg.role == "user"), "")
         if not user_message:
             return {"error": "No user message found in the request"}
-
         model = get_embedding_model()
         query_embedding = model.encode(user_message).tolist()
-
         cursor.execute(
             "SELECT message, response FROM messages ORDER BY embedding <-> %s LIMIT 1",
             (query_embedding,)
         )
         similar = cursor.fetchone()
         context = similar[1] if similar else ""
-
         response = requests.post(
             "http://chat-cluster-ollama-service:11434/api/generate",
             json={
@@ -192,15 +164,12 @@ async def chat_completions(request: ChatRequest):
         )
         response.raise_for_status()
         ollama_response = response.json().get("response", "")
-
         response_embedding = model.encode(ollama_response).tolist()
-
         cursor.execute(
             "INSERT INTO messages (message, response, embedding) VALUES (%s, %s, %s)",
             (user_message, ollama_response, response_embedding)
         )
         conn.commit()
-
         return {
             "id": "chatcmpl-" + str(id(request)),
             "object": "chat.completion",
