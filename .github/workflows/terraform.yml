@@ -121,8 +121,6 @@ jobs:
         tags: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY_WEB }}:latest
         build-args: |
           OPENAI_API_HOST=http://${{ needs.terraform.outputs.alb_dns_name }}:8000/v1
-          NEXT_PUBLIC_SUPABASE_URL=
-          NEXT_PUBLIC_SUPABASE_ANON_KEY=
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
