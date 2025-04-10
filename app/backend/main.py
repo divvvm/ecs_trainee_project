@@ -35,6 +35,9 @@ class ChatRequest(BaseModel):
     messages: list[Message]
     stream: bool = False
 
+class ChatRequestLegacy(BaseModel):
+    prompt: str
+
 class UserSignup(BaseModel):
     email: EmailStr
     password: str
@@ -48,59 +51,126 @@ async def health_check():
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         conn.close()
-        return {"status": "healthy"}
+        return {"status": "ok"}
     except Exception as e:
         return {"status": "error", "detail": str(e)}
 
-@app.post("/v1/auth/signup")
+@app.get("/api/config")
+async def get_config():
+    return {
+        "auth_enabled": True,
+        "features": {
+            "enable_login_form": True,
+            "enable_signup": True,
+            "enable_ldap": False,
+            "enable_oauth_signup": False,
+            "enable_community_sharing": False,
+            "enable_web_search": False,
+            "enable_ollama": True,
+        },
+        "models": [
+            {
+                "id": "llama3",
+                "name": "LLaMA 3",
+                "description": "Meta's LLaMA 3 model"
+            }
+        ],
+        "default_model": "llama3",
+        "ollama_url": "http://chat-cluster-ollama-service:11434",
+        "default_locale": "en",
+        "default_prompt_suggestions": [
+            "What is the capital of France?",
+            "Tell me a joke",
+            "Explain quantum physics in simple terms"
+        ]
+    }
+
+@app.post("/api/v1/auths/signup")
 async def signup(user: UserSignup):
     conn = psycopg2.connect(**DB_CONFIG)
     cursor = conn.cursor()
+
     try:
         cursor.execute("SELECT id FROM users WHERE email = %s", (user.email,))
         if cursor.fetchone():
             raise HTTPException(status_code=400, detail="User already exists")
+
         hashed_password = bcrypt.hash(user.password)
+
         cursor.execute(
             "INSERT INTO users (email, password) VALUES (%s, %s)",
             (user.email, hashed_password)
         )
         conn.commit()
         return JSONResponse(content={"message": "User created successfully"}, status_code=201)
+
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
 
-@app.post("/v1/auth/signin")
+@app.post("/api/v1/auths/signin")
 async def signin(user: UserSignin):
     conn = psycopg2.connect(**DB_CONFIG)
     cursor = conn.cursor()
+
     try:
         cursor.execute("SELECT id, password FROM users WHERE email = %s", (user.email,))
         result = cursor.fetchone()
         if not result or not bcrypt.verify(user.password, result[1]):
             raise HTTPException(status_code=401, detail="Invalid credentials")
+
         return {
             "access_token": "dummy-token",
             "token_type": "bearer",
-            "user": {"id": result[0], "email": user.email}
+            "user": {
+                "id": result[0],
+                "email": user.email
+            }
         }
+
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
     finally:
         cursor.close()
         conn.close()
 
-@app.post("/v1/chat/completions")
+@app.get("/api/tools/")
+async def tools():
+    return [
+        {
+            "id": "ollama",
+            "name": "Ollama",
+            "type": "llm",
+            "url": "http://chat-cluster-ollama-service:11434"
+        }
+    ]
+
+@app.get("/api/tool_servers/")
+async def tool_servers():
+    return [
+        {
+            "id": "ollama-server",
+            "name": "Local Ollama Server",
+            "tools": ["ollama"],
+            "selected_tool_ids": ["ollama"]
+        }
+    ]
+
+@app.get("/api/changelog")
+async def changelog():
+    return []
+
+@app.post("/api/chat/completions")
 async def chat_completions(request: ChatRequest):
     conn = psycopg2.connect(**DB_CONFIG)
     cursor = conn.cursor()
+
     try:
         user_message = next((msg.content for msg in request.messages if msg.role == "user"), "")
         if not user_message:
-            raise HTTPException(status_code=400, detail="No user message found")
+            return {"error": "No user message found in the request"}
 
         model = get_embedding_model()
         query_embedding = model.encode(user_message).tolist()
@@ -117,13 +187,14 @@ async def chat_completions(request: ChatRequest):
             json={
                 "model": "llama3",
                 "prompt": f"Context: {context}\n\nUser: {user_message}",
-                "stream": request.stream
+                "stream": False
             }
         )
         response.raise_for_status()
         ollama_response = response.json().get("response", "")
 
         response_embedding = model.encode(ollama_response).tolist()
+
         cursor.execute(
             "INSERT INTO messages (message, response, embedding) VALUES (%s, %s, %s)",
             (user_message, ollama_response, response_embedding)
@@ -131,14 +202,17 @@ async def chat_completions(request: ChatRequest):
         conn.commit()
 
         return {
-            "id": f"chatcmpl-{id(request)}",
+            "id": "chatcmpl-" + str(id(request)),
             "object": "chat.completion",
             "created": int(datetime.now().timestamp()),
             "model": request.model,
             "choices": [
                 {
                     "index": 0,
-                    "message": {"role": "assistant", "content": ollama_response},
+                    "message": {
+                        "role": "assistant",
+                        "content": ollama_response
+                    },
                     "finish_reason": "stop"
                 }
             ],
@@ -149,7 +223,7 @@ async def chat_completions(request: ChatRequest):
             }
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"error": str(e)}
     finally:
         cursor.close()
         conn.close()

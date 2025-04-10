@@ -109,13 +109,25 @@ module "ecs" {
     {
       name           = "frontend"
       image          = "${module.ecr.repository_urls["web-service"]}:latest"
-      container_port = 3080
+      container_port = 8080
       cpu            = "256"
       memory         = "2048"
       environment = [
         {
-          name  = "NODE_ENV"
-          value = "production"
+          name  = "OPENWEBUI_API_URL"
+          value = "http://${module.alb.alb_dns_name}/api"
+        },
+        {
+          name  = "WEBUI_LOG_LEVEL"
+          value = "DEBUG"
+        },
+        {
+          name  = "WEBUI_URL"
+          value = "http://${module.alb.alb_dns_name}"
+        },
+        {
+          name  = "WEBUI_AUTH"
+          value = "False"
         }
       ]
     },
