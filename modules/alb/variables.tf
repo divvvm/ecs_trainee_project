@@ -52,7 +52,7 @@ variable "services" {
     },
     {
       name              = "frontend"
-      port              = 3080
+      port              = 8080
       health_check_path = "/"
       path_pattern      = "/*"
       priority          = 40
