@@ -85,26 +85,6 @@ module "ecs" {
           value = "postgresql://${module.rds.db_username}:${module.rds.db_password}@${module.rds.db_endpoint}/${module.rds.db_name}"
         },
         {
-          name  = "DB_HOST"
-          value = module.rds.db_host
-        },
-        {
-          name  = "DB_PORT"
-          value = module.rds.db_port
-        },
-        {
-          name  = "DB_USER"
-          value = module.rds.db_username
-        },
-        {
-          name  = "DB_PASSWORD"
-          value = module.rds.db_password
-        },
-        {
-          name  = "DB_NAME"
-          value = module.rds.db_name
-        },
-        {
           name  = "OPENWEBUI_API_URL"
           value = "http://${module.alb.alb_dns_name}/api"
         },
@@ -156,7 +136,28 @@ module "ecs" {
       container_port = 11434
       cpu            = "2048"
       memory         = "6144"
-      environment    = []
+      environment = [
+        {
+          name  = "DB_HOST"
+          value = module.rds.db_host
+        },
+        {
+          name  = "DB_PORT"
+          value = module.rds.db_port
+        },
+        {
+          name  = "DB_USER"
+          value = module.rds.db_username
+        },
+        {
+          name  = "DB_PASSWORD"
+          value = module.rds.db_password
+        },
+        {
+          name  = "DB_NAME"
+          value = module.rds.db_name
+        }
+      ]
     }
   ]
 }
