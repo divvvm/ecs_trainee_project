@@ -30,13 +30,6 @@ variable "services" {
   }))
   default = [
     {
-      name              = "backend"
-      port              = 8000
-      health_check_path = "/health"
-      path_pattern      = "/api/*"
-      priority          = 10
-    },
-    {
       name              = "prometheus"
       port              = 9090
       health_check_path = "/-/healthy"

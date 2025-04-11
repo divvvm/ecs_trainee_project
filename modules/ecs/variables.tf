@@ -1,7 +1,7 @@
 variable "cluster_name" {
   description = "Name of the ECS cluster"
   type        = string
-  default     = "chat-cluster"
+  default     = "ecs-cluster"
 }
 
 variable "private_subnet_ids" {
@@ -54,14 +54,6 @@ variable "services" {
     }))
   }))
   default = [
-    {
-      name           = "backend"
-      image          = ""
-      container_port = 8000
-      cpu            = "256"
-      memory         = "512"
-      environment    = []
-    },
     {
       name           = "frontend"
       image          = ""

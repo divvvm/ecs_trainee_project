@@ -55,8 +55,8 @@ module "rds" {
 module "cloudwatch_logs" {
   source = "./modules/cloudwatch_logs"
 
-  cluster_name  = "chat-cluster"
-  service_names = ["backend", "frontend", "prometheus", "grafana", "ollama"]
+  cluster_name  = "ecs-cluster"
+  service_names = ["frontend", "prometheus", "grafana", "ollama"]
 }
 
 module "ecr" {
@@ -73,39 +73,6 @@ module "ecs" {
   ecr_repository_urls      = module.ecr.repository_urls
   depends_on               = [module.cloudwatch_logs]
   services = [
-    {
-      name           = "backend"
-      image          = "${module.ecr.repository_urls["app-service"]}:latest"
-      container_port = 8000
-      cpu            = "256"
-      memory         = "512"
-      environment = [
-        {
-          name  = "DB_HOST"
-          value = module.rds.db_host
-        },
-        {
-          name  = "DB_PORT"
-          value = "5432"
-        },
-        {
-          name  = "DB_NAME"
-          value = "mydb"
-        },
-        {
-          name  = "DB_USER"
-          value = "denys"
-        },
-        {
-          name  = "DB_PASSWORD"
-          value = "password123"
-        },
-        {
-          name  = "PGPASSWORD"
-          value = "password123"
-        }
-      ]
-    },
     {
       name           = "frontend"
       image          = "${module.ecr.repository_urls["web-service"]}:latest"

@@ -9,15 +9,13 @@ on:
 env:
   AWS_REGION: "us-east-1"
   AWS_ACCOUNT_ID: "423623847730"
-  ECR_REPOSITORY_APP: "app-service"
   ECR_REPOSITORY_WEB: "web-service"
   ECR_REPOSITORY_OLLAMA: "ollama"
-  ECS_CLUSTER: "chat-cluster"
-  ECS_SERVICE_BACKEND: "chat-cluster-backend-service"
-  ECS_SERVICE_FRONTEND: "chat-cluster-frontend-service"
-  ECS_SERVICE_OLLAMA: "chat-cluster-ollama-service"
-  ECS_SERVICE_PROMETHEUS: "chat-cluster-prometheus-service"
-  ECS_SERVICE_GRAFANA: "chat-cluster-grafana-service"
+  ECS_CLUSTER: "ecs-cluster"
+  ECS_SERVICE_FRONTEND: "ecs-cluster-frontend-service"
+  ECS_SERVICE_OLLAMA: "ecs-cluster-ollama-service"
+  ECS_SERVICE_PROMETHEUS: "ecs-cluster-prometheus-service"
+  ECS_SERVICE_GRAFANA: "ecs-cluster-grafana-service"
 
 jobs:
   terraform:
@@ -93,16 +91,6 @@ jobs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: Build and push app-service image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./app/backend
-        file: ./app/backend/Dockerfile
-        push: true
-        tags: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY_APP }}:latest
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-
     - name: Build and push web-service image
       uses: docker/build-push-action@v5
       with:
@@ -140,7 +128,6 @@ jobs:
 
     - name: Restart ECS services
       run: |
-        aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE_BACKEND }} --force-new-deployment
         aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE_FRONTEND }} --force-new-deployment
         aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE_OLLAMA }} --force-new-deployment
         aws ecs update-service --cluster ${{ env.ECS_CLUSTER }} --service ${{ env.ECS_SERVICE_PROMETHEUS }} --force-new-deployment
