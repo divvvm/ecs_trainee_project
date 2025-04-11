@@ -81,6 +81,30 @@ module "ecs" {
       memory         = "2048"
       environment = [
         {
+          name  = "DATABASE_URL"
+          value = "postgresql://${module.rds.db_username}:${module.rds.db_password}@${module.rds.db_endpoint}/${module.rds.db_name}"
+        },
+        {
+          name  = "DB_HOST"
+          value = module.rds.db_host
+        },
+        {
+          name  = "DB_PORT"
+          value = module.rds.db_port
+        },
+        {
+          name  = "DB_USER"
+          value = module.rds.db_username
+        },
+        {
+          name  = "DB_PASSWORD"
+          value = module.rds.db_password
+        },
+        {
+          name  = "DB_NAME"
+          value = module.rds.db_name
+        },
+        {
           name  = "OPENWEBUI_API_URL"
           value = "http://${module.alb.alb_dns_name}/api"
         },
@@ -95,6 +119,18 @@ module "ecs" {
         {
           name  = "WEBUI_AUTH"
           value = "False"
+        },
+        {
+          name  = "ENABLE_RAG"
+          value = "True"
+        },
+        {
+          name  = "RAG_EMBEDDING_ENGINE"
+          value = "sentence_transformers"
+        },
+        {
+          name  = "RAG_EMBEDDING_MODEL"
+          value = "all-MiniLM-L6-v2"
         }
       ]
     },
