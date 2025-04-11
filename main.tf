@@ -106,7 +106,7 @@ module "ecs" {
         },
         {
           name  = "RAG_EMBEDDING_ENGINE"
-          value = "sentence_transformers"
+          value = "ollama"
         },
         {
           name  = "RAG_EMBEDDING_MODEL"
