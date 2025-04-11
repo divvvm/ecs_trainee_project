@@ -8,3 +8,4 @@ RUN chmod +x /init_db.sh
 EXPOSE 8080
 
 ENTRYPOINT ["/init_db.sh"]
+CMD ["npm", "run", "start"]

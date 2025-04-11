@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+echo "Starting init_db.sh"
 echo "DB_HOST: $DB_HOST"
 echo "DB_PORT: $DB_PORT"
 echo "DB_USER: $DB_USER"
@@ -15,7 +16,6 @@ done
 echo "PostgreSQL is up - executing commands"
 
 PGPASSWORD=$DB_PASSWORD psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "CREATE EXTENSION IF NOT EXISTS vector;"
-
 PGPASSWORD=$DB_PASSWORD psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c "CREATE TABLE IF NOT EXISTS messages (
   id SERIAL PRIMARY KEY,
   message TEXT NOT NULL,
@@ -23,4 +23,5 @@ PGPASSWORD=$DB_PASSWORD psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_N
   embedding VECTOR(384)
 );"
 
+echo "Finished init_db.sh, starting OpenWebUI with: $@"
 exec "$@"
