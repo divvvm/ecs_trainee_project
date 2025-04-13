@@ -96,6 +96,13 @@ resource "aws_security_group" "ollama" {
     security_groups = [aws_security_group.ecs.id]
   }
 
+  ingress {
+    from_port       = 11434
+    to_port         = 11434
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0

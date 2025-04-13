@@ -113,8 +113,12 @@ module "ecs" {
           value = "nomic-embed-text"
         },
         {
-          name  = "OLLAMA_API_BASE_URL"
-          value = "http://ecs-cluster-ollama-service:11434"
+          name  = "OLLAMA_HOST"
+          value = "http://${module.alb.alb_dns_name}/ollama"
+        },
+        {
+          name  = "OLLAMA_BASE_URL"
+          value = "http://${module.alb.alb_dns_name}/ollama"
         }
       ]
     },

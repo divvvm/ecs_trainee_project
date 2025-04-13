@@ -61,7 +61,7 @@ resource "aws_ecs_service" "main" {
   }
 
   dynamic "load_balancer" {
-    for_each = each.value.name != "ollama" ? [1] : []
+    for_each = [1]
     content {
       target_group_arn = var.target_group_arns[each.key]
       container_name   = each.value.name

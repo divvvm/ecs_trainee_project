@@ -49,6 +49,13 @@ variable "services" {
       health_check_path = "/"
       path_pattern      = "/*"
       priority          = 40
+    },
+    {
+      name              = "ollama"
+      port              = 11434
+      health_check_path = "/api/tags"
+      path_pattern      = "/ollama/*"
+      priority          = 50
     }
   ]
 }
