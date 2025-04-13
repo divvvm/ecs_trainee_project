@@ -110,7 +110,11 @@ module "ecs" {
         },
         {
           name  = "RAG_EMBEDDING_MODEL"
-          value = "all-MiniLM-L6-v2"
+          value = "nomic-embed-text"
+        },
+        {
+          name  = "OLLAMA_API_BASE_URL"
+          value = "http://ecs-cluster-ollama-service:11434"
         }
       ]
     },
