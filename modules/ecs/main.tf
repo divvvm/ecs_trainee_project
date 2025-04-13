@@ -61,11 +61,18 @@ resource "aws_ecs_service" "main" {
   }
 
   dynamic "load_balancer" {
-    for_each = [1]
+    for_each = each.value.name != "ollama" ? [1] : []
     content {
       target_group_arn = var.target_group_arns[each.key]
       container_name   = each.value.name
       container_port   = each.value.container_port
+    }
+  }
+
+  dynamic "service_registries" {
+    for_each = each.value.name == "ollama" ? [1] : []
+    content {
+      registry_arn = aws_service_discovery_service.ollama.arn
     }
   }
 
@@ -75,5 +82,27 @@ resource "aws_ecs_service" "main" {
 
   tags = {
     Name = "${var.cluster_name}-${each.value.name}-service"
+  }
+}
+
+resource "aws_service_discovery_private_dns_namespace" "main" {
+  name        = "ecs.local"
+  description = "Private DNS for ECS services"
+  vpc         = var.vpc_id
+}
+
+resource "aws_service_discovery_service" "ollama" {
+  name = "ollama"
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.main.id
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1
   }
 }

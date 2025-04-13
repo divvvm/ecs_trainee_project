@@ -40,6 +40,11 @@ variable "ecr_repository_urls" {
   type        = map(string)
 }
 
+variable "vpc_id" {
+  description = "ID of the VPC for the ALB"
+  type        = string
+}
+
 variable "services" {
   description = "List of services with their configurations"
   type = list(object({
@@ -76,14 +81,6 @@ variable "services" {
       container_port = 3000
       cpu            = "256"
       memory         = "512"
-      environment    = []
-    },
-    {
-      name           = "ollama"
-      image          = ""
-      container_port = 11434
-      cpu            = "2048"
-      memory         = "6144"
       environment    = []
     }
   ]

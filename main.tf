@@ -65,6 +65,7 @@ module "ecr" {
 
 module "ecs" {
   source                   = "./modules/ecs"
+  vpc_id                   = module.vpc.vpc_id
   private_subnet_ids       = [module.subnets.private_app_subnet_1_id, module.subnets.private_app_subnet_2_id]
   ecs_security_group_id    = module.security_groups.ecs_sg_id
   ollama_security_group_id = module.security_groups.ollama_sg_id
@@ -114,11 +115,11 @@ module "ecs" {
         },
         {
           name  = "OLLAMA_HOST"
-          value = "http://${module.alb.alb_dns_name}/ollama"
+          value = "http://ollama.ecs.local:11434"
         },
         {
           name  = "OLLAMA_BASE_URL"
-          value = "http://${module.alb.alb_dns_name}/ollama"
+          value = "http://ollama.ecs.local:11434"
         }
       ]
     },
