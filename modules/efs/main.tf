@@ -10,10 +10,10 @@ resource "aws_efs_file_system" "main" {
 }
 
 resource "aws_efs_mount_target" "main" {
-  for_each = toset(var.subnet_ids)
+  for_each = { for idx, subnet_id in var.subnet_ids : "subnet-${idx}" => subnet_id }
 
   file_system_id  = aws_efs_file_system.main.id
-  subnet_id       = each.key
+  subnet_id       = each.value
   security_groups = [var.efs_security_group_id]
 }
 
