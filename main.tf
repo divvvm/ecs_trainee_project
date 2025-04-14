@@ -68,6 +68,7 @@ module "efs" {
   vpc_id                = module.vpc.vpc_id
   subnet_ids            = [module.subnets.private_app_subnet_1_id, module.subnets.private_app_subnet_2_id]
   ecs_security_group_id = module.security_groups.ecs_sg_id
+  efs_security_group_id = module.security_groups.efs_sg_id
   tags = {
     Environment = "production"
   }
