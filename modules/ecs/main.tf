@@ -16,6 +16,22 @@ resource "aws_ecs_task_definition" "main" {
   memory                   = each.value.memory
   execution_role_arn       = var.ecs_task_execution_role_arn
 
+  dynamic "volume" {
+    for_each = each.value.name == "prometheus" && var.efs_file_system_id != "" ? [1] : []
+    content {
+      name = "prometheus-data"
+      efs_volume_configuration {
+        file_system_id     = var.efs_file_system_id
+        root_directory     = "/"
+        transit_encryption = "ENABLED"
+        authorization_config {
+          access_point_id = var.prometheus_access_point_id
+          iam             = "DISABLED"
+        }
+      }
+    }
+  }
+
   container_definitions = jsonencode([
     {
       name      = each.value.name
@@ -37,6 +53,13 @@ resource "aws_ecs_task_definition" "main" {
           "awslogs-stream-prefix" = "ecs"
         }
       }
+      mountPoints = each.value.name == "prometheus" ? [
+        {
+          sourceVolume  = "prometheus-data"
+          containerPath = "/prometheus"
+          readOnly      = false
+        }
+      ] : []
     }
   ])
 

@@ -85,3 +85,15 @@ variable "services" {
     }
   ]
 }
+
+variable "efs_file_system_id" {
+  description = "EFS file system ID for Prometheus"
+  type        = string
+  default     = ""
+}
+
+variable "prometheus_access_point_id" {
+  description = "EFS access point ID for Prometheus"
+  type        = string
+  default     = ""
+}

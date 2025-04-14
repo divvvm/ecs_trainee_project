@@ -63,16 +63,28 @@ module "ecr" {
   source = "./modules/ecr"
 }
 
+module "efs" {
+  source                = "./modules/efs"
+  vpc_id                = module.vpc.vpc_id
+  subnet_ids            = [module.subnets.private_app_subnet_1_id, module.subnets.private_app_subnet_2_id]
+  ecs_security_group_id = module.security_groups.ecs_sg_id
+  tags = {
+    Environment = "production"
+  }
+}
+
 module "ecs" {
-  source                   = "./modules/ecs"
-  vpc_id                   = module.vpc.vpc_id
-  private_subnet_ids       = [module.subnets.private_app_subnet_1_id, module.subnets.private_app_subnet_2_id]
-  ecs_security_group_id    = module.security_groups.ecs_sg_id
-  ollama_security_group_id = module.security_groups.ollama_sg_id
-  target_group_arns        = module.alb.target_group_arns
-  db_endpoint              = module.rds.db_endpoint
-  ecr_repository_urls      = module.ecr.repository_urls
-  depends_on               = [module.cloudwatch_logs]
+  source                     = "./modules/ecs"
+  vpc_id                     = module.vpc.vpc_id
+  private_subnet_ids         = [module.subnets.private_app_subnet_1_id, module.subnets.private_app_subnet_2_id]
+  ecs_security_group_id      = module.security_groups.ecs_sg_id
+  ollama_security_group_id   = module.security_groups.ollama_sg_id
+  target_group_arns          = module.alb.target_group_arns
+  db_endpoint                = module.rds.db_endpoint
+  ecr_repository_urls        = module.ecr.repository_urls
+  efs_file_system_id         = module.efs.efs_file_system_id
+  prometheus_access_point_id = module.efs.prometheus_access_point_id
+  depends_on                 = [module.cloudwatch_logs]
   services = [
     {
       name           = "frontend"

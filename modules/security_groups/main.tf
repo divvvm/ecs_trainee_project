@@ -107,3 +107,20 @@ resource "aws_security_group" "ollama" {
     Name = "ollama-sg"
   }
 }
+
+resource "aws_security_group" "efs" {
+  name        = "efs-sg"
+  description = "Security group for EFS mount targets"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port       = 2049
+    to_port         = 2049
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs.id]
+  }
+
+  tags = {
+    Name = "efs-sg"
+  }
+}
