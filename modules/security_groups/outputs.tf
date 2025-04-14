@@ -17,3 +17,8 @@ output "ollama_sg_id" {
   description = "ID of the Ollama security group"
   value       = aws_security_group.ollama.id
 }
+
+output "efs_sg_id" {
+  description = "ID of the Ollama security group"
+  value       = aws_security_group.efs.id
+}

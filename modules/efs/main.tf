@@ -14,7 +14,7 @@ resource "aws_efs_mount_target" "main" {
 
   file_system_id  = aws_efs_file_system.main.id
   subnet_id       = each.key
-  security_groups = [aws_security_group.efs.id]
+  security_groups = [var.efs_security_group_id]
 }
 
 resource "aws_efs_access_point" "prometheus" {

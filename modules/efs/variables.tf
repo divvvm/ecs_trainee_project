@@ -42,3 +42,8 @@ variable "backup_role_arn" {
   type        = string
   default     = "arn:aws:iam::423623847730:role/ecsBackupPolicyRole"
 }
+
+variable "efs_security_group_id" {
+  description = "Security group ID for EFS mount targets"
+  type        = string
+}
