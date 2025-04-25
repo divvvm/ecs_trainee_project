@@ -33,29 +33,29 @@ variable "services" {
       name              = "prometheus"
       port              = 9090
       health_check_path = "/-/healthy"
-      path_pattern      = "/prometheus/*"
+      path_pattern      = ["/prometheus", "/prometheus/*"]
       priority          = 20
     },
     {
       name              = "grafana"
       port              = 3000
       health_check_path = "/api/health"
-      path_pattern      = "/grafana/*"
+      path_pattern      = ["/grafana", "/grafana/*"]
       priority          = 30
-    },
-    {
-      name              = "frontend"
-      port              = 8080
-      health_check_path = "/"
-      path_pattern      = "/*"
-      priority          = 40
     },
     {
       name              = "ollama"
       port              = 11434
       health_check_path = "/api/tags"
-      path_pattern      = "/ollama/*"
-      priority          = 50
+      path_pattern      = ["/ollama/*"]
+      priority          = 40
+    },
+    {
+      name              = "frontend"
+      port              = 8080
+      health_check_path = "/"
+      path_pattern      = ["/*"]
+      priority          = 100
     }
   ]
 }
