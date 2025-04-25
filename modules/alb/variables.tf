@@ -25,7 +25,7 @@ variable "services" {
     name              = string
     port              = number
     health_check_path = string
-    path_pattern      = string
+    path_pattern      = list(string)
     priority          = number
   }))
   default = [
