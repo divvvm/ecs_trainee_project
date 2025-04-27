@@ -150,7 +150,12 @@ module "ecs" {
       container_port = 3000
       cpu            = "256"
       memory         = "512"
-      environment    = []
+      environment = [
+        {
+          name  = "GF_SERVER_ROOT_URL"
+          value = "/grafana/"
+        }
+      ]
     },
     {
       name           = "ollama"
