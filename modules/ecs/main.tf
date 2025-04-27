@@ -60,6 +60,10 @@ resource "aws_ecs_task_definition" "main" {
           readOnly      = false
         }
       ] : []
+      command = each.value.name == "prometheus" ? [
+        "--config.file=/etc/prometheus/prometheus.yml",
+        "--web.external-url=/prometheus"
+      ] : null
     }
   ])
 
