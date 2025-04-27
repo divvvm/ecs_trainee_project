@@ -107,6 +107,14 @@ resource "aws_ecs_service" "main" {
   tags = {
     Name = "${var.cluster_name}-${each.value.name}-service"
   }
+
+  depends_on = [aws_service_discovery_service.main]
+}
+
+resource "aws_service_discovery_private_dns_namespace" "main" {
+  name        = "ecs.local"
+  description = "Private DNS for ECS services"
+  vpc         = var.vpc_id
 }
 
 resource "aws_service_discovery_service" "main" {
@@ -125,4 +133,6 @@ resource "aws_service_discovery_service" "main" {
   health_check_custom_config {
     failure_threshold = 1
   }
+
+  depends_on = [aws_service_discovery_private_dns_namespace.main]
 }
