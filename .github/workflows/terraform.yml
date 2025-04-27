@@ -11,6 +11,7 @@ env:
   AWS_ACCOUNT_ID: "423623847730"
   ECR_REPOSITORY_WEB: "web-service"
   ECR_REPOSITORY_OLLAMA: "ollama"
+  ECR_REPOSITORY_PROMETHEUS: "prometheus"
   ECS_CLUSTER: "ecs-cluster"
   ECS_SERVICE_FRONTEND: "ecs-cluster-frontend-service"
   ECS_SERVICE_OLLAMA: "ecs-cluster-ollama-service"
@@ -108,6 +109,16 @@ jobs:
         file: ./app/ollama/Dockerfile
         push: true
         tags: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY_OLLAMA }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push prometheus image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./app/prometheus
+        file: ./app/prometheus/Dockerfile
+        push: true
+        tags: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY_PROMETHEUS }}:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
