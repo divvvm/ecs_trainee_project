@@ -96,11 +96,8 @@ resource "aws_ecs_service" "main" {
     }
   }
 
-  dynamic "service_registries" {
-    for_each = each.value.name == "ollama" ? [1] : []
-    content {
-      registry_arn = aws_service_discovery_service.ollama.arn
-    }
+  service_registries {
+    registry_arn = aws_service_discovery_service.main[each.key].arn
   }
 
   deployment_controller {
@@ -112,14 +109,10 @@ resource "aws_ecs_service" "main" {
   }
 }
 
-resource "aws_service_discovery_private_dns_namespace" "main" {
-  name        = "ecs.local"
-  description = "Private DNS for ECS services"
-  vpc         = var.vpc_id
-}
+resource "aws_service_discovery_service" "main" {
+  for_each = { for service in var.services : service.name => service }
 
-resource "aws_service_discovery_service" "ollama" {
-  name = "ollama"
+  name = each.value.name
 
   dns_config {
     namespace_id = aws_service_discovery_private_dns_namespace.main.id

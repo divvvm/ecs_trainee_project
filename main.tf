@@ -138,7 +138,7 @@ module "ecs" {
     },
     {
       name           = "prometheus"
-      image          = "prom/prometheus:latest"
+      image          = "${module.ecr.repository_urls["prometheus"]}:latest"
       container_port = 9090
       cpu            = "256"
       memory         = "512"
