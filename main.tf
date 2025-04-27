@@ -153,7 +153,7 @@ module "ecs" {
       environment = [
         {
           name  = "GF_SERVER_ROOT_URL"
-          value = "/grafana/"
+          value = "http://${module.alb.alb_dns_name}/grafana/"
         }
       ]
     },
